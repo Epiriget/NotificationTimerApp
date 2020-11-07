@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.CountDownTimer
 import android.os.SystemClock
 import android.widget.Chronometer
 import androidx.core.app.AlarmManagerCompat
@@ -41,32 +42,37 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
         get() = _chronometerOn
 
     // Todo: replace with self-made implementation
-    private lateinit var chronometer: Chronometer
+    private lateinit var timer: CountDownTimer
 
     init {
+
+        // Todo: check how FLAG_NO_CREATE exactly works
+        _chronometerOn.value = false/*PendingIntent.getBroadcast(getApplication(),
+        REQUEST_CODE,
+        notifyIntent,
+        PendingIntent.FLAG_NO_CREATE) != null
+*/
         notifyPendingIntent = PendingIntent.getBroadcast(
             getApplication(),
             REQUEST_CODE,
             notifyIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )
-
-//        if(_chronometerOn.value!!) {
-//            createChronometer()
-//        }
     }
 
     private fun createChronometer() {
         viewModelScope.launch {
             val startTime = loadStartTime()
 
-            chronometer = Chronometer(app)
-            chronometer.base = startTime
-            chronometer.setOnChronometerTickListener {
-                _elapsedTime.value = SystemClock.elapsedRealtime() - startTime
-            }
+            timer = object : CountDownTimer(startTime + minute, second) {
+                override fun onTick(millisUntilFinished: Long) {
+                    _elapsedTime.value = SystemClock.elapsedRealtime() - startTime
+                }
 
-            chronometer.start()
+                override fun onFinish() {
+                    resetChronometer()
+                }
+            }.start()
         }
     }
 
@@ -76,7 +82,7 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
     }
 
     private fun resetChronometer() {
-        chronometer.stop()
+        timer.cancel()
         _elapsedTime.value = 0
         _chronometerOn.value = false
     }
@@ -91,8 +97,7 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
 
     // Call it in case of starting bg task
     private fun startChronometer() {
-        _chronometerOn.value?.let {
-            if(!it) {
+            if(_chronometerOn.value == false) {
                 _chronometerOn.value = true
 
                 val startTime = SystemClock.elapsedRealtime()
@@ -110,14 +115,13 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
                 viewModelScope.launch {
                     saveStartTime(startTime)
                 }
+                createChronometer()
             }
-        }
-        startChronometer()
     }
 
     private suspend fun saveStartTime(startTime: Long) {
         withContext(Dispatchers.IO) {
-            prefs.edit().putLong(START_TIME, startTime)
+            prefs.edit().putLong(START_TIME, startTime).apply()
         }
     }
 

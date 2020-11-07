@@ -14,6 +14,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.notificationtimerapp.utl.setElapsedTime
+import java.time.format.DateTimeFormatter
 
 /**
  * A simple [Fragment] subclass.
@@ -33,7 +35,7 @@ class TimerFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_timer, container, false)
 
         val textview = view.findViewById<TextView>(R.id.timer)
-        val timeObserver = Observer<Long> {time -> textview.text = time.toString()}
+        val timeObserver = Observer<Long> {time -> textview.setElapsedTime(time) }
         viewModel.elapsedTime.observe(viewLifecycleOwner, timeObserver)
 
 
