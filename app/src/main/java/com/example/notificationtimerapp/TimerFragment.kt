@@ -72,9 +72,9 @@ class TimerFragment : Fragment() {
             notificationChannel.enableVibration(true)
             notificationChannel.description = getString(R.string.notification_channel_description)
 
-            var notificationManager = requireActivity().getSystemService(NotificationManager::class.java)
+            val notificationManager = requireActivity().getSystemService(
+                NotificationManager::class.java) as NotificationManager
             notificationManager.createNotificationChannel(notificationChannel)
-            notificationManager.sendNotification(getString(R.string.notification_text), requireContext())
         }
     }
 

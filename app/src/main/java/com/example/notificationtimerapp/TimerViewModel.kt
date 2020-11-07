@@ -47,17 +47,21 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
     init {
 
         // Todo: check how FLAG_NO_CREATE exactly works
-        _chronometerOn.value = false/*PendingIntent.getBroadcast(getApplication(),
+        _chronometerOn.value = PendingIntent.getBroadcast(getApplication(),
         REQUEST_CODE,
         notifyIntent,
         PendingIntent.FLAG_NO_CREATE) != null
-*/
+
         notifyPendingIntent = PendingIntent.getBroadcast(
             getApplication(),
             REQUEST_CODE,
             notifyIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )
+
+        if(_chronometerOn.value!!) {
+            createChronometer()
+        }
     }
 
     private fun createChronometer() {
@@ -82,7 +86,9 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
     }
 
     private fun resetChronometer() {
-        timer.cancel()
+        if(this::timer.isInitialized) {
+            timer.cancel()
+        }
         _elapsedTime.value = 0
         _chronometerOn.value = false
     }
@@ -108,7 +114,7 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
                 AlarmManagerCompat.setExactAndAllowWhileIdle(
                     alarmManager,
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    startTime + minute,
+                    startTime + second * 10,
                     notifyPendingIntent
                 )
 
