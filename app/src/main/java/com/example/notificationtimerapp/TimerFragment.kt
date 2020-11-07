@@ -1,6 +1,11 @@
 package com.example.notificationtimerapp
 
 import android.app.AlarmManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -14,7 +19,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.notificationtimerapp.utl.sendNotification
 import com.example.notificationtimerapp.utl.setElapsedTime
+import java.lang.StringBuilder
 import java.time.format.DateTimeFormatter
 
 /**
@@ -43,11 +50,32 @@ class TimerFragment : Fragment() {
         val resetButton = view.findViewById<Button>(R.id.reset_button)
 
 
-
         startButton.setOnClickListener { viewModel.setAlarm(true) }
         resetButton.setOnClickListener { viewModel.setAlarm(false) }
 
+        createNotificationChannel(getString(R.string.notification_channel_id),
+            getString(R.string.notification_channel_name))
+
         return view
+    }
+
+    private fun createNotificationChannel(channelId:String, channelName:String) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH
+            )
+
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.CYAN
+            notificationChannel.enableVibration(true)
+            notificationChannel.description = getString(R.string.notification_channel_description)
+
+            var notificationManager = requireActivity().getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(notificationChannel)
+            notificationManager.sendNotification(getString(R.string.notification_text), requireContext())
+        }
     }
 
 }

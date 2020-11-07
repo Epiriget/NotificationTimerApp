@@ -4,4 +4,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="default_timer_value">00:00</string>
+    <string name="notification_channel_id" translatable="false">default_notification_channel</string>
+    <string name="notification_title">NotificationTimeApp</string>
+    <string name="notification_text">Timer works in background!</string>
+    <string name="notification_channel_description">Default notification channel</string>
+    <string name="notification_channel_name">timer notiifcation channel</string>
 </resources>
