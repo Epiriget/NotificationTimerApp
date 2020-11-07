@@ -1,0 +1,2 @@
+rootProject.name='NotificationTimerApp'
+include ':app'
