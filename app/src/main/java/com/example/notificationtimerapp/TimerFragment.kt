@@ -24,9 +24,6 @@ import com.example.notificationtimerapp.utl.setElapsedTime
 import java.lang.StringBuilder
 import java.time.format.DateTimeFormatter
 
-/**
- * A simple [Fragment] subclass.
- */
 class TimerFragment : Fragment() {
 
     private val viewModel: TimerViewModel by viewModels()
@@ -43,7 +40,7 @@ class TimerFragment : Fragment() {
 
         val textview = view.findViewById<TextView>(R.id.timer)
         val timeObserver = Observer<Long> {time -> textview.setElapsedTime(time) }
-        viewModel.elapsedTime.observe(viewLifecycleOwner, timeObserver)
+        viewModel.elapsedTime.observe(requireActivity(), timeObserver)
 
 
         val startButton = view.findViewById<Button>(R.id.start_button)

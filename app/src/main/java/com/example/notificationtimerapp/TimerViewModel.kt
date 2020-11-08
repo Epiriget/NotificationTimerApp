@@ -13,6 +13,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.notificationtimerapp.utl.SimpleChronometer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,28 +26,22 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
     private val notifyPendingIntent: PendingIntent
     private val notifyIntent: Intent = Intent(app, AlarmReceiver::class.java)
 
-    private val minute = 60_000L
     private val second = 1_000L
 
     private val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     private var prefs = app.getSharedPreferences("com.example.notificationtimerapp", Context.MODE_PRIVATE)
 
-    //Todo: check whether LiveData is being used in proper way
-    private val _elapsedTime = MutableLiveData<Long>()
+    private val _elapsedTime = MutableLiveData<Long>(0L)
     val elapsedTime: LiveData<Long>
         get() = _elapsedTime
 
     private val _chronometerOn = MutableLiveData<Boolean>()
-    val chronometerOn: LiveData<Boolean>
-        get() = _chronometerOn
 
-    // Todo: replace with self-made implementation
-    private lateinit var timer: CountDownTimer
+    private lateinit var timer: SimpleChronometer
 
     init {
 
-        // Todo: check how FLAG_NO_CREATE exactly works
         _chronometerOn.value = PendingIntent.getBroadcast(getApplication(),
         REQUEST_CODE,
         notifyIntent,
@@ -62,33 +57,33 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
         if(_chronometerOn.value!!) {
             createChronometer()
         }
+
     }
 
     private fun createChronometer() {
         viewModelScope.launch {
             val startTime = loadStartTime()
+            if(_elapsedTime.value!! > 0) {
+                _elapsedTime.value = 0
+            }
 
-            timer = object : CountDownTimer(startTime + minute, second) {
-                override fun onTick(millisUntilFinished: Long) {
+            timer = object: SimpleChronometer(SystemClock.elapsedRealtime(), second) {
+                override fun onTickListener(fromStartMs: Long) {
                     _elapsedTime.value = SystemClock.elapsedRealtime() - startTime
                 }
+            }
+            timer.start()
 
-                override fun onFinish() {
-                    resetChronometer()
-                }
-            }.start()
         }
     }
 
     private fun cancelNotification() {
-        resetChronometer()
         alarmManager.cancel(notifyPendingIntent)
+        resetChronometer()
     }
 
     private fun resetChronometer() {
-        if(this::timer.isInitialized) {
-            timer.cancel()
-        }
+        timer.cancel()
         _elapsedTime.value = 0
         _chronometerOn.value = false
     }
@@ -108,9 +103,6 @@ class TimerViewModel(private val app: Application): AndroidViewModel(app) {
 
                 val startTime = SystemClock.elapsedRealtime()
 
-                //Todo: cancel all existing notifications
-
-                //Todo: replace to WorkManager
                 AlarmManagerCompat.setExactAndAllowWhileIdle(
                     alarmManager,
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
